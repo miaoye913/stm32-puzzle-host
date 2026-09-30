@@ -1,5 +1,10 @@
 # STM32 拼图机上位机（puzzle-host）
 
+[![tests](https://github.com/miaoye913/stm32-puzzle-host/actions/workflows/tests.yml/badge.svg)](https://github.com/miaoye913/stm32-puzzle-host/actions/workflows/tests.yml)
+![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 用 Python 写的 PC 端上位机，通过串口按自定义二进制帧协议远程操控 STM32F103 拼图机：
 设置 X / Y 坐标、旋转角度、舵机、电磁铁，触发重新初始化，并实时轮询显示全部状态。
 
@@ -170,11 +175,17 @@ puzzle-host/
 
 ## 已验证范围（诚实声明）
 
-* ✅ 75 项测试在 **Windows + Python 3.13** 上全部通过，其中包含真实 TCP socket
-  与真实 pyserial 链路（后两条路径与平台无关）；
-* ✅ 代码不含 Windows-only 调用；换行已统一 LF，等宽字体与 `stdout` 编码均已做跨平台处理；
-* ⚠️ **GUI 未在 Linux 实机验证过**（开发机无 Linux 环境）。若在 Linux 上运行
-  `python3 -m unittest discover -s tests -t .` 全绿，即说明实机可用。
+* ✅ **CI 每次提交自动在 Linux / Windows / macOS × Python 3.9 / 3.12 上跑全部测试**
+  （见 [.github/workflows/tests.yml](.github/workflows/tests.yml) 与页首徽章）；
+* ✅ 其中有一个**刻意不装 Tk 的 ubuntu 作业**，专门验证「无桌面环境 / SSH 服务器」
+  场景下 CLI 可用（GUI 会自动提示改用命令行）；
+* ✅ 75 项测试本地全部通过，且包含真实 TCP socket 与真实 pyserial 链路
+  （后两条路径与平台无关，Linux 上走同一个 `serialposix` 后端）；
+* ✅ 已用「从 GitHub 全新 clone → 装依赖 → 跑测试」验证过发布版本可用，
+  仓库不含 vendor 依赖；
+* ⚠️ 唯一未在真实硬件上验证的是 **GUI 的观感**（字体、中文字形、窗口布局在
+  各发行版上的细微差异）；代码层面的跨平台处理（等宽字体探测、UTF-8 输出、
+  `/dev/serial/by-id` 枚举）都已就位，详见 [docs/LINUX.md](docs/LINUX.md)。
 
 ---
 
