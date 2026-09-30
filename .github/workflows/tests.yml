@@ -11,6 +11,9 @@ jobs:
   test:
     name: ${{ matrix.os }} / Python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
+    env:
+      # Windows runner 默认 cp1252，直接 print 中文会 UnicodeEncodeError
+      PYTHONIOENCODING: utf-8
     strategy:
       fail-fast: false
       matrix:
@@ -37,13 +40,17 @@ jobs:
       - name: 运行测试
         run: python -m unittest discover -s tests -t . -v
 
-      - name: 协议自检（不连设备，仅校验帧格式与 CRC/XOR）
-        run: python -c "import protocol as P; assert P.build_frame(P.CMD_PING)==bytes([0xAA,0x55,0x07,0x00,0x07,0x0D]); assert P.set_x_frame(1000)[4:6]==bytes([0xE8,0x03]); print('协议自检通过')"
+      - name: 协议自检（不连设备，仅校验组帧字节与 XOR 校验）
+        # 输出保持纯 ASCII，避免不同 runner 的 stdout 编码差异
+        run: |
+          python -c "import protocol as P; assert P.build_frame(P.CMD_PING) == bytes([0xAA,0x55,0x07,0x00,0x07,0x0D]); assert P.set_x_frame(1000) == bytes([0xAA,0x55,0x01,0x04,0xE8,0x03,0x00,0x00,0xEE,0x0D]); assert P.get_all_frame() == bytes([0xAA,0x55,0x10,0x00,0x10,0x0D]); print('protocol self-check passed')"
 
   # 无图形界面的最小环境：只跑非 GUI 测试，确认 CLI 可用
   cli-only:
     name: ubuntu-latest / 无 GUI 环境（仅 CLI）
     runs-on: ubuntu-latest
+    env:
+      PYTHONIOENCODING: utf-8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

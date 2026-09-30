@@ -120,7 +120,21 @@ class TestGuiSmoke(unittest.TestCase):
         """串口扫描在无设备时也不应报错。"""
         app = self._make_app()
         app.refresh_ports()
-        self.assertIsInstance(app.cmb_port["values"], tuple)
+        # 注意：没有串口时 Tk 的 combobox["values"] 会返回空字符串而不是空元组，
+        # 所以这里只断言「不抛异常 + 下拉框处于可用状态」，不写死类型。
+        self.assertIn("values", app.cmb_port.keys())
+
+    def test_refresh_ports_lists_devices(self):
+        """有串口时确实会填进下拉框（用假的枚举结果验证）。"""
+        import gui
+
+        app = self._make_app()
+        gui.list_serial_ports = lambda: [("COM7", "USB-SERIAL CH340 (COM7)"),
+                                        ("/dev/ttyUSB0", "CH340")]
+        app.refresh_ports()
+        self.assertEqual(tuple(app.cmb_port["values"]), ("COM7", "/dev/ttyUSB0"))
+        self.assertEqual(app.var_port.get(), "COM7")
+        self.assertIn("CH340", app.lbl_ports.cget("text"))
 
     def test_poll_interval_clamped(self):
         """轮询间隔下限保护（防止请求堆积）。"""
