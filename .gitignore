@@ -1,0 +1,28 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+# ---- 依赖（由 requirements.txt 安装，不入库）----
+vendor/
+
+# ---- 界面/调试产物 ----
+*.log
+screenshot.png
+window.png
+full.png
+*_debug_*.py
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

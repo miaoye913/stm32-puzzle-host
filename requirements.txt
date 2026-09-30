@@ -1,0 +1,11 @@
+# puzzle-host 依赖
+#
+# 只有 GUI / CLI / 串口链路需要 pyserial；
+# protocol.py 与单元测试为纯标准库，零依赖。
+#
+# 安装（已随工程附带 vendor/pyserial，可直接用）：
+#   python -m pip install -r requirements.txt
+#
+# 若 pip 无法联网，可直接使用仓库内的 vendor 目录（程序会自动加入 sys.path）。
+
+pyserial>=3.4
