@@ -1,0 +1,61 @@
+name: tests
+
+# 在 Linux / Windows / macOS 上跑全部测试（不需要硬件）
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.9", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      # 界面冒烟测试需要 tkinter：Linux 上装系统包，macOS/Windows 自带
+      - name: 安装 Tk（仅 Linux）
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk
+
+      - name: 运行测试
+        run: python -m unittest discover -s tests -t . -v
+
+      - name: 协议自检（不连设备，仅校验帧格式与 CRC/XOR）
+        run: python -c "import protocol as P; assert P.build_frame(P.CMD_PING)==bytes([0xAA,0x55,0x07,0x00,0x07,0x0D]); assert P.set_x_frame(1000)[4:6]==bytes([0xE8,0x03]); print('协议自检通过')"
+
+  # 无图形界面的最小环境：只跑非 GUI 测试，确认 CLI 可用
+  cli-only:
+    name: ubuntu-latest / 无 GUI 环境（仅 CLI）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements.txt
+      - name: 只跑不依赖 tkinter 的测试
+        run: |
+          python -m unittest \
+            tests.test_protocol tests.test_client \
+            tests.test_e2e_socket tests.test_serial_link -v
+      - name: 命令行自检
+        run: |
+          python cli.py --help
+          python cli.py ports || true
